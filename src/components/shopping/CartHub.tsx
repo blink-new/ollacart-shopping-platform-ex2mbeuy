@@ -66,10 +66,11 @@ export function CartHub({ activeCart }: CartHubProps) {
       const cartResult = await CartService.getCartItems('shopping')
       setCartItems(cartResult)
 
-      // If no data and database error, enable demo mode
-      if (productsResult.data.length === 0 && cartResult.length === 0) {
-        setDemoMode(true)
-      }
+      // Check if we're getting demo data (indicates database issues)
+      const isDemoData = productsResult.data.some(p => p.id.startsWith('demo_')) || 
+                        cartResult.some(c => c.id.startsWith('cart_demo_'))
+      
+      setDemoMode(isDemoData)
     } catch (error) {
       console.error('Failed to load data:', error)
       setDemoMode(true)
@@ -262,6 +263,80 @@ export function CartHub({ activeCart }: CartHubProps) {
                     </div>
                   ))}
                 </div>
+              ) : demoMode ? (
+                <div className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+                    <div className="flex items-center justify-center mb-3">
+                      <div className="p-2 bg-amber-100 rounded-full">
+                        <ShoppingCart className="h-6 w-6 text-amber-600" />
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-semibold text-amber-900 mb-2">Demo Mode Active</h3>
+                    <p className="text-amber-800 mb-4">
+                      The database is currently being set up. Below is a preview of how your shopping cart will work:
+                    </p>
+                  </div>
+                  
+                  {/* Show demo products and cart items */}
+                  {cartItems.map((item) => {
+                    const product = products.find(p => p.id === item.productId)
+                    if (!product) return null
+                    
+                    return (
+                      <Card key={item.id} className="mb-3 border-amber-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-4">
+                            <img
+                              src={product.photo.url}
+                              alt={product.name}
+                              className="w-16 h-16 object-cover rounded-lg"
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900">{product.name}</h4>
+                              <p className="text-sm text-gray-500">{product.domain}</p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="font-semibold text-lg">${product.price.toFixed(2)}</span>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm text-gray-500">Qty: {item.quantity}</span>
+                                  <Badge variant="secondary">Demo Item</Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col space-y-2">
+                              <Button size="sm" variant="outline" disabled>
+                                <Heart className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" variant="outline" disabled>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                  
+                  <div className="mt-6 pt-4 border-t">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-lg font-semibold">
+                        Demo Total: ${cartItems.reduce((sum, item) => {
+                          const product = products.find(p => p.id === item.productId)
+                          return sum + (product ? product.price * item.quantity : 0)
+                        }, 0).toFixed(2)}
+                      </span>
+                    </div>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" 
+                      size="lg"
+                      disabled
+                    >
+                      Demo Checkout (Database Setup Required)
+                    </Button>
+                    <p className="text-xs text-amber-700 mt-3 text-center">
+                      Full functionality will be available once the database is ready!
+                    </p>
+                  </div>
+                </div>
               ) : products.length === 0 && cartItems.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-4">
@@ -275,57 +350,6 @@ export function CartHub({ activeCart }: CartHubProps) {
                       Your AI-powered social shopping platform is ready. Start by adding your first product from any online store.
                     </p>
                     <AddProductModal onProductAdded={handleProductAdded} />
-                    
-                    {demoMode && (
-                      <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <p className="text-sm text-amber-800 mb-3">
-                          <strong>Demo Mode:</strong> Database is being set up. Here's what your shopping experience will look like:
-                        </p>
-                        
-                        {/* Demo Product Cards */}
-                        <div className="space-y-3">
-                          <Card className="text-left">
-                            <CardContent className="p-4">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
-                                  <ShoppingCart className="h-8 w-8 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-gray-900">Wireless Headphones</h4>
-                                  <p className="text-sm text-gray-500">amazon.com</p>
-                                  <div className="flex items-center justify-between mt-2">
-                                    <span className="font-semibold text-lg">$89.99</span>
-                                    <Badge variant="default">Demo Item</Badge>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                          
-                          <Card className="text-left">
-                            <CardContent className="p-4">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
-                                  <Tag className="h-8 w-8 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-gray-900">Smart Watch</h4>
-                                  <p className="text-sm text-gray-500">bestbuy.com</p>
-                                  <div className="flex items-center justify-between mt-2">
-                                    <span className="font-semibold text-lg">$199.99</span>
-                                    <Badge variant="default">Demo Item</Badge>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                        
-                        <p className="text-xs text-amber-700 mt-4">
-                          Once the database is ready, you'll be able to add real products from any online store!
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : cartItems.length > 0 ? (
@@ -414,6 +438,13 @@ export function CartHub({ activeCart }: CartHubProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {demoMode && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-amber-800">
+                      <strong>Demo Mode:</strong> This shows how the buying cart will work once the database is ready.
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm text-gray-600">Items ready for purchase with unified checkout</p>
                 {cartItems.length > 0 ? (
                   <div>
@@ -456,9 +487,10 @@ export function CartHub({ activeCart }: CartHubProps) {
                         className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700" 
                         size="lg"
                         onClick={handleCheckout}
+                        disabled={demoMode}
                       >
                         <ShoppingBag className="h-5 w-5 mr-2" />
-                        Checkout Now
+                        {demoMode ? 'Demo Checkout (Database Setup Required)' : 'Checkout Now'}
                       </Button>
                     </div>
                   </div>
@@ -487,17 +519,24 @@ export function CartHub({ activeCart }: CartHubProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {demoMode && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-amber-800">
+                      <strong>Demo Mode:</strong> This shows how the sharing cart will work once the database is ready.
+                    </p>
+                  </div>
+                )}
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                   <h3 className="font-medium text-purple-900 mb-2">Share with Friends</h3>
                   <p className="text-sm text-purple-700 mb-3">
                     Items in this cart will appear in your social feed and can be shared via public link
                   </p>
                   <div className="flex space-x-2">
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700" disabled={demoMode}>
                       <Share2 className="h-4 w-4 mr-2" />
                       Generate Share Link
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" disabled={demoMode}>
                       Post to Feed
                     </Button>
                   </div>

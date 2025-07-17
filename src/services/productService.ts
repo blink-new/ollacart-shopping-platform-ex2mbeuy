@@ -140,10 +140,114 @@ export class ProductService {
         size: transformedProducts.length
       }
     } catch (error) {
-      console.warn('Database not available, returning empty results:', error)
+      console.warn('Database not available, returning demo data:', error)
+      
+      // Return demo data when database is not available
+      const demoProducts: Product[] = [
+        {
+          id: 'demo_1',
+          anonymousId: '',
+          name: 'Wireless Bluetooth Headphones',
+          description: 'High-quality wireless headphones with noise cancellation',
+          keywords: ['headphones', 'wireless', 'bluetooth', 'audio'],
+          price: 89.99,
+          color: 'Black',
+          size: 'One Size',
+          shared: 0,
+          purchased: 0,
+          purchasedStatus: 0,
+          photo: {
+            url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
+            small: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&h=200&fit=crop',
+            normal: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop'
+          },
+          photos: [],
+          url: 'https://amazon.com/demo-headphones',
+          originalUrl: 'https://amazon.com/demo-headphones',
+          domain: 'amazon.com',
+          ceId: '',
+          sequence: Date.now(),
+          userId: 'demo_user',
+          categoryId: 'electronics',
+          forkId: '',
+          forkedIds: [],
+          likes: [],
+          dislikes: [],
+          addedBy: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'demo_2',
+          anonymousId: '',
+          name: 'Smart Fitness Watch',
+          description: 'Track your fitness goals with this advanced smartwatch',
+          keywords: ['watch', 'fitness', 'smart', 'health'],
+          price: 199.99,
+          color: 'Silver',
+          size: '42mm',
+          shared: 0,
+          purchased: 0,
+          purchasedStatus: 0,
+          photo: {
+            url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
+            small: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop',
+            normal: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop'
+          },
+          photos: [],
+          url: 'https://bestbuy.com/demo-watch',
+          originalUrl: 'https://bestbuy.com/demo-watch',
+          domain: 'bestbuy.com',
+          ceId: '',
+          sequence: Date.now() - 1000,
+          userId: 'demo_user',
+          categoryId: 'electronics',
+          forkId: '',
+          forkedIds: [],
+          likes: [],
+          dislikes: [],
+          addedBy: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'demo_3',
+          anonymousId: '',
+          name: 'Organic Cotton T-Shirt',
+          description: 'Comfortable and sustainable organic cotton t-shirt',
+          keywords: ['shirt', 'organic', 'cotton', 'clothing'],
+          price: 29.99,
+          color: 'Navy Blue',
+          size: 'M',
+          shared: 0,
+          purchased: 0,
+          purchasedStatus: 0,
+          photo: {
+            url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
+            small: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&h=200&fit=crop',
+            normal: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop'
+          },
+          photos: [],
+          url: 'https://example-store.com/demo-shirt',
+          originalUrl: 'https://example-store.com/demo-shirt',
+          domain: 'example-store.com',
+          ceId: '',
+          sequence: Date.now() - 2000,
+          userId: 'demo_user',
+          categoryId: 'clothing',
+          forkId: '',
+          forkedIds: [],
+          likes: [],
+          dislikes: [],
+          addedBy: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ]
+      
       return {
-        data: [],
-        size: 0
+        data: demoProducts,
+        size: demoProducts.length
       }
     }
   }
@@ -441,8 +545,33 @@ export class CartService {
 
       return items.map(item => this.transformCartItem(item))
     } catch (error) {
-      console.warn('Database not available, returning empty cart:', error)
-      return []
+      console.warn('Database not available, returning demo cart items:', error)
+      
+      // Return demo cart items when database is not available
+      const demoCartItems: CartItem[] = [
+        {
+          id: 'cart_demo_1',
+          productId: 'demo_1',
+          quantity: 1,
+          userId: 'demo_user',
+          cartType: cartType,
+          affiliateLinkId: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'cart_demo_2',
+          productId: 'demo_2',
+          quantity: 2,
+          userId: 'demo_user',
+          cartType: cartType,
+          affiliateLinkId: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ]
+      
+      return demoCartItems
     }
   }
 
