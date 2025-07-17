@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ShoppingCart, Share2, Heart, Tag, Plus, Trash2 } from 'lucide-react'
+import { ShoppingCart, Share2, Heart, Tag, Plus, Trash2, ShoppingBag } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,13 +35,21 @@ interface SocialPost {
   timestamp: string
 }
 
-export function CartHub() {
-  const [activeTab, setActiveTab] = useState('shopping')
+interface CartHubProps {
+  activeCart: string
+}
+
+export function CartHub({ activeCart }: CartHubProps) {
+  const [activeTab, setActiveTab] = useState(activeCart)
   const [products, setProducts] = useState<Product[]>([])
   const [cartItems, setCartItems] = useState<CartItemType[]>([])
   const [loading, setLoading] = useState(true)
   const [showStripeSetup, setShowStripeSetup] = useState(false)
   const [demoMode, setDemoMode] = useState(false)
+
+  useEffect(() => {
+    setActiveTab(activeCart)
+  }, [activeCart])
 
   useEffect(() => {
     loadData()
@@ -212,30 +220,22 @@ export function CartHub() {
   return (
     <div className="flex-1 max-w-2xl mx-auto p-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="shopping" className="flex items-center space-x-2">
             <ShoppingCart className="h-4 w-4" />
             <span>Shopping</span>
           </TabsTrigger>
-          <TabsTrigger value="share" className="flex items-center space-x-2">
+          <TabsTrigger value="buying" className="flex items-center space-x-2">
+            <ShoppingBag className="h-4 w-4" />
+            <span>Buying</span>
+          </TabsTrigger>
+          <TabsTrigger value="sharing" className="flex items-center space-x-2">
             <Share2 className="h-4 w-4" />
-            <span>Share</span>
+            <span>Sharing</span>
           </TabsTrigger>
           <TabsTrigger value="social" className="flex items-center space-x-2">
             <Heart className="h-4 w-4" />
             <span>Social</span>
-          </TabsTrigger>
-          <TabsTrigger value="sale" className="flex items-center space-x-2">
-            <Tag className="h-4 w-4" />
-            <span>Sale</span>
-          </TabsTrigger>
-          <TabsTrigger value="affiliate" className="flex items-center space-x-2">
-            <Share2 className="h-4 w-4" />
-            <span>Affiliate</span>
-          </TabsTrigger>
-          <TabsTrigger value="stripe" className="flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>Stripe</span>
           </TabsTrigger>
         </TabsList>
 
@@ -404,24 +404,142 @@ export function CartHub() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="share" className="mt-6">
+        <TabsContent value="buying" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Share Cart</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <span>Buying Cart - Ready for Checkout</span>
+                <Badge variant="secondary">{cartItems.length} items</Badge>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">Share your cart with friends and get their opinions!</p>
-                {cartItems.map((item) => (
-                  <CartItemCard key={item.id} item={item} showActions={false} />
-                ))}
-                <div className="flex space-x-2">
-                  <Button className="flex-1">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share Cart
-                  </Button>
-                  <Button variant="outline">Copy Link</Button>
+                <p className="text-sm text-gray-600">Items ready for purchase with unified checkout</p>
+                {cartItems.length > 0 ? (
+                  <div>
+                    {cartItems.map((item) => {
+                      const product = products.find(p => p.id === item.productId)
+                      if (!product) return null
+                      
+                      return (
+                        <Card key={item.id} className="mb-3">
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-4">
+                              <img
+                                src={product.photo.url}
+                                alt={product.name}
+                                className="w-16 h-16 object-cover rounded-lg"
+                              />
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900">{product.name}</h4>
+                                <p className="text-sm text-gray-500">{product.domain}</p>
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="font-semibold text-lg">${product.price.toFixed(2)}</span>
+                                  <Badge variant="default">Ready to Buy</Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                    <div className="mt-6 pt-4 border-t">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-lg font-semibold">
+                          Total: ${cartItems.reduce((sum, item) => {
+                            const product = products.find(p => p.id === item.productId)
+                            return sum + (product ? product.price * item.quantity : 0)
+                          }, 0).toFixed(2)}
+                        </span>
+                      </div>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700" 
+                        size="lg"
+                        onClick={handleCheckout}
+                      >
+                        <ShoppingBag className="h-5 w-5 mr-2" />
+                        Checkout Now
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <ShoppingBag className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-500">No items ready for checkout</p>
+                    <p className="text-sm text-gray-400 mt-2">Move items from shopping cart when ready to buy</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sharing" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Sharing Cart</span>
+                <Button size="sm">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share Collection
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h3 className="font-medium text-purple-900 mb-2">Share with Friends</h3>
+                  <p className="text-sm text-purple-700 mb-3">
+                    Items in this cart will appear in your social feed and can be shared via public link
+                  </p>
+                  <div className="flex space-x-2">
+                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Generate Share Link
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      Post to Feed
+                    </Button>
+                  </div>
                 </div>
+                
+                {cartItems.length > 0 ? (
+                  cartItems.map((item) => {
+                    const product = products.find(p => p.id === item.productId)
+                    if (!product) return null
+                    
+                    return (
+                      <Card key={item.id} className="mb-3">
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-4">
+                            <img
+                              src={product.photo.url}
+                              alt={product.name}
+                              className="w-16 h-16 object-cover rounded-lg"
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-900">{product.name}</h4>
+                              <p className="text-sm text-gray-500">{product.domain}</p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="font-semibold text-lg">${product.price.toFixed(2)}</span>
+                                <Badge variant="secondary">Shareable</Badge>
+                              </div>
+                            </div>
+                            <Button size="sm" variant="outline">
+                              <Heart className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })
+                ) : (
+                  <div className="text-center py-8">
+                    <Share2 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-500">No items to share</p>
+                    <p className="text-sm text-gray-400 mt-2">Add items to share with friends and get feedback</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -442,73 +560,7 @@ export function CartHub() {
           </div>
         </TabsContent>
 
-        <TabsContent value="sale" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Tag className="h-5 w-5" />
-                <span>Sale Items</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Tag className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">No sale items yet</p>
-                <p className="text-sm text-gray-400 mt-2">Items on sale will appear here</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="affiliate" className="mt-6">
-          <AffiliateTracker products={products} />
-        </TabsContent>
-
-        <TabsContent value="stripe" className="mt-6">
-          {showStripeSetup ? (
-            <StripeConnectSetup onSetupComplete={() => setShowStripeSetup(false)} />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Stripe Connect Integration</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-gray-600">
-                  Connect your business to Stripe to enable unified checkout and payment processing for your products.
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <h3 className="font-medium text-blue-900 mb-2">For Retailers</h3>
-                    <ul className="text-sm text-blue-800 space-y-1">
-                      <li>• Accept payments from customers</li>
-                      <li>• Automatic payouts to your bank</li>
-                      <li>• Detailed sales analytics</li>
-                      <li>• Fraud protection</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <h3 className="font-medium text-green-900 mb-2">For Affiliates</h3>
-                    <ul className="text-sm text-green-800 space-y-1">
-                      <li>• Earn commissions on sales</li>
-                      <li>• Track performance metrics</li>
-                      <li>• Automated commission payouts</li>
-                      <li>• Real-time analytics</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={() => setShowStripeSetup(true)}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                >
-                  Setup Stripe Connect
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
       </Tabs>
     </div>
   )
